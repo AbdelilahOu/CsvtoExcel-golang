@@ -41,6 +41,7 @@ func main() {
 	files, err := os.ReadDir(dataFolderPath)
 	if err != nil {
 		fmt.Println("error reading the folder", err)
+		return
 	}
 	// declar
 	var csvPathsAndNames []csvInfos

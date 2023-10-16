@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/xuri/excelize/v2"
+	"golang.org/x/exp/slices"
 )
 
 type csvInfos struct {
@@ -85,6 +86,14 @@ func main() {
 }
 
 func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
+	// re arrange headers
+	var rearrangeInfos struct {
+		image struct {
+			exists bool
+			cell   string
+		}
+	}
+	//
 	err := excelFile.DeleteSheet("Sheet1")
 	if err != nil {
 		fmt.Println("error deleting sheet", err)
@@ -116,6 +125,19 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 		if err != nil {
 			fmt.Println("error reading record 2:", err)
 			break
+		}
+		// check for images
+		imageExists := slices.Contains(record, "image")
+		rearrangeInfos.image.exists = true
+		if imageExists {
+			// get image cell
+			imageIndex := slices.Index[[]string, string](record, "image")
+			imageCell, err := excelize.CoordinatesToCellName(imageIndex, 1)
+			if err != nil {
+				fmt.Println("error getting cell name :", err)
+				break
+			}
+			rearrangeInfos.image.cell = imageCell
 		}
 		// get cell name from cords
 		cell, err := excelize.CoordinatesToCellName(1, row)
@@ -150,5 +172,9 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 		}
 		row++
 		// write other records
+	}
+	// re arrange cells
+	if rearrangeInfos.image.exists {
+		fmt.Println("image exists", rearrangeInfos.image.cell)
 	}
 }

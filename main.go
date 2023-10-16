@@ -20,8 +20,8 @@ type csvInfos struct {
 // create map to change keys
 var (
 	mapKeys = map[string]string{
-		"created_at": "Date",
-		"id":         "Reference",
+		"created_at": "date",
+		"id":         "reference",
 	}
 )
 
@@ -110,7 +110,7 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 		// get data
 		record, err := reader.Read()
 		if err == io.EOF {
-			fmt.Println("error reading records", err)
+			fmt.Println("no more input to read", err)
 			break
 		}
 		if err != nil {

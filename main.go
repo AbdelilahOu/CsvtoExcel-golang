@@ -15,7 +15,6 @@ import (
 
 type csvInfos struct {
 	path      string
-	csvName   string
 	sheetName string
 }
 
@@ -53,7 +52,6 @@ func main() {
 				// collect needed data
 				csvPathsAndNames = append(csvPathsAndNames, csvInfos{
 					sheetName: toPascaleCase(fileNameWoExt),
-					csvName:   fileNameWoExt,
 					path:      path.Join(dataFolderPath, file.Name()),
 				})
 			}

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/exp/slices"
@@ -65,7 +66,8 @@ func main() {
 		printTableInExcel(excelFile, tableInfos)
 	}
 	// create excel
-	excelFile.SaveAs("test.xlsx")
+	year, month, day := time.Now().Date()
+	excelFile.SaveAs(fmt.Sprintf("%d-%d-%d-%d.xlsx", year, month, day, time.Now().UnixMilli()))
 }
 
 // inventory_mouvements -> InventoryMouvement

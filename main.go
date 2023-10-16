@@ -17,12 +17,23 @@ type csvInfos struct {
 	sheetName string
 }
 
+// create map to change keys
+var (
+	mapKeys = map[string]string{
+		"created_at": "Date",
+		"id":         "Reference",
+	}
+)
+
 // inventory_mouvements -> InventoryMouvement
-func getSheetName(name string) string {
+func toPascaleCase(name string) string {
+	if name == "" {
+		return ""
+	}
 	var result string = ""
 	if strings.Contains(name, "_") {
 		for _, substring := range strings.Split(name, "_") {
-			result = result + getSheetName(substring)
+			result = result + toPascaleCase(substring)
 		}
 	} else {
 		firstChart := name[0:1]
@@ -56,22 +67,28 @@ func main() {
 				fileNameWoExt := strings.Split(file.Name(), ".")[0]
 				// collect needed data
 				csvPathsAndNames = append(csvPathsAndNames, csvInfos{
-					sheetName: getSheetName(fileNameWoExt),
+					sheetName: toPascaleCase(fileNameWoExt),
 					csvName:   fileNameWoExt,
 					path:      path.Join(dataFolderPath, file.Name()),
 				})
 			}
 		}
 	}
-	fmt.Println(csvPathsAndNames[1])
-	for i,tableInfos := range csvPathsAndNames {
-		printTableInExcel(&)
+	// create excel file
+	excelFile := excelize.NewFile(excelize.Options{})
+	//
+	for _, tableInfos := range csvPathsAndNames {
+		printTableInExcel(excelFile, tableInfos)
 	}
 	// create excel
-	// file := excelize.NewFile(excelize.Options{})
+	excelFile.SaveAs("test.xlsx")
 }
 
 func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
+	err := excelFile.DeleteSheet("Sheet1")
+	if err != nil {
+		fmt.Println("error deleting sheet", err)
+	}
 	// get file data
 	csvFile, err := os.Open(infos.path)
 	if err != nil {
@@ -108,6 +125,17 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 		}
 		// write row
 		if row == 1 {
+			// update headers
+			for i, header := range record {
+				// get if it exists
+				updatedKey, ok := mapKeys[header]
+				if ok {
+					record[i] = toPascaleCase(updatedKey)
+					continue
+				}
+				record[i] = toPascaleCase(header)
+			}
+			// write headers
 			if err := excelFile.SetSheetRow(infos.sheetName, cell, &record); err != nil {
 				fmt.Println("coudnt write first row : ", err)
 				break
@@ -115,5 +143,12 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 			row++
 			continue
 		}
+		// write headers
+		if err := excelFile.SetSheetRow(infos.sheetName, cell, &record); err != nil {
+			fmt.Println("coudnt write row : ", err)
+			break
+		}
+		row++
+		// write other records
 	}
 }

@@ -85,6 +85,7 @@ func main() {
 	excelFile.SaveAs("test.xlsx")
 }
 
+// csv file to excel sheet
 func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 	// re arrange headers
 	var rearrangeInfos struct {

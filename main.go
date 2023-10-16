@@ -26,23 +26,6 @@ var (
 	}
 )
 
-// inventory_mouvements -> InventoryMouvement
-func toPascaleCase(name string) string {
-	if name == "" {
-		return ""
-	}
-	var result string = ""
-	if strings.Contains(name, "_") {
-		for _, substring := range strings.Split(name, "_") {
-			result = result + toPascaleCase(substring)
-		}
-	} else {
-		firstChart := name[0:1]
-		result = strings.ToUpper(firstChart) + name[1:]
-	}
-	return result
-}
-
 func main() {
 	// get all args
 	commandLineArgs := os.Args[1:]
@@ -85,13 +68,47 @@ func main() {
 	excelFile.SaveAs("test.xlsx")
 }
 
+// inventory_mouvements -> InventoryMouvement
+func toPascaleCase(name string) string {
+	if name == "" {
+		return ""
+	}
+	var result string = ""
+	if strings.Contains(name, "_") {
+		for _, substring := range strings.Split(name, "_") {
+			result = result + toPascaleCase(substring)
+		}
+	} else {
+		firstChart := name[0:1]
+		result = strings.ToUpper(firstChart) + name[1:]
+	}
+	return result
+}
+
+// rearrange an array
+func rearrangeArray(array []string, from int, to int) []string {
+	if from == to {
+		return array
+	}
+	// get first element
+	firstElement := array[from]
+	// remove first element
+	array = slices.Delete(array, from, from+1)
+	// insert first element
+	array = slices.Insert(array, to, firstElement)
+	return array
+}
+
 // csv file to excel sheet
 func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 	// re arrange headers
 	var rearrangeInfos struct {
 		image struct {
-			exists bool
-			cell   string
+			exists     bool
+			mouvements struct {
+				from int
+				to   int
+			}
 		}
 	}
 	//
@@ -127,19 +144,6 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 			fmt.Println("error reading record 2:", err)
 			break
 		}
-		// check for images
-		imageExists := slices.Contains(record, "image")
-		rearrangeInfos.image.exists = true
-		if imageExists {
-			// get image cell
-			imageIndex := slices.Index[[]string, string](record, "image")
-			imageCell, err := excelize.CoordinatesToCellName(imageIndex+1, 1)
-			if err != nil {
-				fmt.Println("error getting cell name :", err)
-				break
-			}
-			rearrangeInfos.image.cell = imageCell
-		}
 		// get cell name from cords
 		cell, err := excelize.CoordinatesToCellName(1, row)
 		if err != nil {
@@ -148,6 +152,17 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 		}
 		// write row
 		if row == 1 {
+			// change image to first col
+			// check for images
+			imageExists := slices.Contains(record, "image")
+			rearrangeInfos.image.exists = true
+			if imageExists {
+				// get image cell
+				imageIndex := slices.Index[[]string, string](record, "image")
+				rearrangeInfos.image.mouvements.from = imageIndex
+				rearrangeInfos.image.mouvements.to = 0
+				record = rearrangeArray(record, imageIndex, 0)
+			}
 			// update headers
 			for i, header := range record {
 				// get if it exists
@@ -166,6 +181,11 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 			row++
 			continue
 		}
+		if rearrangeInfos.image.exists {
+			// check for images
+			record = rearrangeArray(record, rearrangeInfos.image.mouvements.from, rearrangeInfos.image.mouvements.to)
+		}
+
 		// write headers
 		if err := excelFile.SetSheetRow(infos.sheetName, cell, &record); err != nil {
 			fmt.Println("coudnt write row : ", err)
@@ -173,9 +193,5 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 		}
 		row++
 		// write other records
-	}
-	// re arrange cells
-	if rearrangeInfos.image.exists {
-		fmt.Println("image exists", rearrangeInfos.image.cell)
 	}
 }

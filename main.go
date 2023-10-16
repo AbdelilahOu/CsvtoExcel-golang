@@ -132,7 +132,7 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 		if imageExists {
 			// get image cell
 			imageIndex := slices.Index[[]string, string](record, "image")
-			imageCell, err := excelize.CoordinatesToCellName(imageIndex, 1)
+			imageCell, err := excelize.CoordinatesToCellName(imageIndex+1, 1)
 			if err != nil {
 				fmt.Println("error getting cell name :", err)
 				break

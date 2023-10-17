@@ -27,6 +27,7 @@ var (
 )
 
 func main() {
+	start := time.Now()
 	// get all args
 	commandLineArgs := os.Args[1:]
 	// check if path exists
@@ -66,6 +67,8 @@ func main() {
 	// create excel
 	year, month, day := time.Now().Date()
 	excelFile.SaveAs(fmt.Sprintf("%d-%d-%d-%d.xlsx", year, month, day, time.Now().UnixMilli()))
+	end := time.Now()
+	fmt.Println("time elapsed :", end.Sub(start))
 }
 
 // inventory_mouvements -> InventoryMouvement
@@ -137,7 +140,7 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 		// get data
 		record, err := reader.Read()
 		if err == io.EOF {
-			fmt.Println("no more input to read", err)
+			// fmt.Println("no more input to read", err)
 			break
 		}
 		if err != nil {

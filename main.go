@@ -32,16 +32,14 @@ func main() {
 	commandLineArgs := os.Args[1:]
 	// check if path exists
 	if len(commandLineArgs) == 0 {
-		fmt.Println("Please provide a path")
-		return
+		panic("Please provide a path")
 	}
 	// data folder path
 	dataFolderPath := commandLineArgs[0]
 	// read files
 	files, err := os.ReadDir(dataFolderPath)
 	if err != nil {
-		fmt.Println("error reading the folder", err)
-		return
+		panic("error reading the folder")
 	}
 	// declar
 	var csvPathsAndNames []csvInfos
@@ -68,7 +66,7 @@ func main() {
 	year, month, day := time.Now().Date()
 	excelFile.SaveAs(fmt.Sprintf("%d-%d-%d-%d.xlsx", year, month, day, time.Now().UnixMilli()))
 	end := time.Now()
-	fmt.Println("time elapsed :", end.Sub(start))
+	fmt.Print(end.Sub(start))
 }
 
 // inventory_mouvements -> InventoryMouvement
@@ -117,13 +115,12 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 	//
 	err := excelFile.DeleteSheet("Sheet1")
 	if err != nil {
-		fmt.Println("error deleting sheet", err)
+		panic("error deleting sheet")
 	}
 	// get file data
 	csvFile, err := os.Open(infos.path)
 	if err != nil {
-		fmt.Println("error opening file", err)
-		return
+		panic("error opening file")
 	}
 	defer csvFile.Close()
 	// get reader
@@ -131,8 +128,7 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 	// get sheet
 	_, err = excelFile.NewSheet(infos.sheetName)
 	if err != nil {
-		fmt.Println("error creating sheet", err)
-		return
+		panic("error creating sheet")
 	}
 	// iterate over rows
 	row := 1
@@ -140,18 +136,16 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 		// get data
 		record, err := reader.Read()
 		if err == io.EOF {
-			// fmt.Println("no more input to read", err)
+			// panic("no more input to read")
 			break
 		}
 		if err != nil {
-			fmt.Println("error reading record 2:", err)
-			break
+			panic("error reading record 2:")
 		}
 		// get cell name from cords
 		cell, err := excelize.CoordinatesToCellName(1, row)
 		if err != nil {
-			fmt.Println("error getting cell name :", err)
-			break
+			panic("error getting cell name :")
 		}
 		// write row
 		if row == 1 {
@@ -178,8 +172,7 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 			}
 			// write headers
 			if err := excelFile.SetSheetRow(infos.sheetName, cell, &record); err != nil {
-				fmt.Println("coudnt write first row : ", err)
-				break
+				panic("coudnt write first row : ")
 			}
 			row++
 			continue
@@ -191,8 +184,7 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 
 		// write headers
 		if err := excelFile.SetSheetRow(infos.sheetName, cell, &record); err != nil {
-			fmt.Println("coudnt write row : ", err)
-			break
+			panic("coudnt write row : ")
 		}
 		row++
 		// write other records

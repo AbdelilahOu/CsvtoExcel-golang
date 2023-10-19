@@ -60,11 +60,20 @@ func main() {
 	excelFile := excelize.NewFile(excelize.Options{})
 	//
 	for _, tableInfos := range csvPathsAndNames {
-		printTableInExcel(excelFile, tableInfos)
+		_ = printTableInExcel(excelFile, tableInfos)
+		// err := excelFile.AddTable(tableInfos.sheetName, &excelize.Table{
+		// 	Range:     rangeCells,
+		// 	Name:      "Table" + tableInfos.sheetName,
+		// 	StyleName: "TableStyleMedium9",
+		// })
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	panic("error creating table")
+		// }
 	}
 	// create excel
 	year, month, day := time.Now().Date()
-	excelFile.SaveAs(fmt.Sprintf("%d-%d-%d-%d.xlsx", year, month, day, time.Now().UnixMilli()))
+	excelFile.SaveAs(fmt.Sprintf("%s/%d-%d-%d-%d.xlsx", strings.TrimSuffix(dataFolderPath, "/"), year, month, day, time.Now().UnixMilli()))
 	end := time.Now()
 	fmt.Print(end.Sub(start))
 }
@@ -101,7 +110,7 @@ func rearrangeArray(array []string, from int, to int) []string {
 }
 
 // csv file to excel sheet
-func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
+func printTableInExcel(excelFile *excelize.File, infos csvInfos) string {
 	// re arrange headers
 	var rearrangeInfos struct {
 		image struct {
@@ -132,6 +141,7 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 	}
 	// iterate over rows
 	row := 1
+	column := 0
 	for {
 		// get data
 		record, err := reader.Read()
@@ -160,6 +170,8 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 				rearrangeInfos.image.mouvements.to = 0
 				record = rearrangeArray(record, imageIndex, 0)
 			}
+			// get columns
+			column = len(record)
 			// update headers
 			for i, header := range record {
 				// get if it exists
@@ -189,4 +201,10 @@ func printTableInExcel(excelFile *excelize.File, infos csvInfos) {
 		row++
 		// write other records
 	}
+	cell, err := excelize.CoordinatesToCellName(column, row-1)
+	if err != nil {
+		panic("error getting cell name :")
+	}
+	rangeCells := fmt.Sprintf("A1:%s", cell)
+	return rangeCells
 }
